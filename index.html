@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Construyamos tu modelo de competencias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#F6F5FC; --surface:#FFFFFF; --sunk:#F0EEFA; --ink:#1B1640; --muted:#5D5781; --line:#E1DCF4;
+  --violet:#6B3FF2; --violet-ink:#4B23CC; --violet-soft:#EEE8FF;
+  --turq:#12AE9F; --turq-ink:#0B6F66; --turq-soft:#DCF5F1;
+  --warn:#A44A12; --warn-soft:#FDEEE2; --ok:#0B7F62;
+  --hero-bg:#0E7C72; --hero-ink:#FFFFFF; --hero-muted:#C7F1EB;
+  --l1:#DCD0FF; --l2:#BBA4FF; --l3:#9575FB; --l4:#6B3FF2; --l5:#4D25CF; --l6:#3412A3;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Sora","Inter",system-ui,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121027; --surface:#1B1736; --sunk:#16132D; --ink:#EDEAFF; --muted:#A7A1CB; --line:#2E2856;
+    --violet:#9C7DFF; --violet-ink:#BCA6FF; --violet-soft:#271F4F;
+    --turq:#3BD6C6; --turq-ink:#6FE6DA; --turq-soft:#13383A;
+    --warn:#F2A26B; --warn-soft:#3A2416; --ok:#4FD1A8;
+    --hero-bg:#0B4A45; --hero-ink:#F4F1FF; --hero-muted:#CFC6F5;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121027; --surface:#1B1736; --sunk:#16132D; --ink:#EDEAFF; --muted:#A7A1CB; --line:#2E2856;
+  --violet:#9C7DFF; --violet-ink:#BCA6FF; --violet-soft:#271F4F;
+  --turq:#3BD6C6; --turq-ink:#6FE6DA; --turq-soft:#13383A;
+  --warn:#F2A26B; --warn-soft:#3A2416; --ok:#4FD1A8;
+  --hero-bg:#0B4A45; --hero-ink:#F4F1FF; --hero-muted:#CFC6F5;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.2;margin:0;letter-spacing:-.01em}
+p{margin:0 0 .8em}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--turq);outline-offset:2px;border-radius:6px}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px clamp(16px,4vw,40px);background:var(--hero-bg);color:var(--hero-ink)}
+.brand{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
+.brand small{font-family:var(--sans);font-weight:500;font-size:13px;opacity:.85;margin-left:10px;letter-spacing:0}
+.bar .sp{flex:1}
+.seg{display:inline-flex;border:1px solid color-mix(in srgb,var(--hero-ink) 35%,transparent);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--hero-ink);padding:6px 12px;border-radius:999px;font-size:13px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--hero-ink);color:var(--hero-bg)}
+.barbtn{border:1px solid color-mix(in srgb,var(--hero-ink) 35%,transparent);background:transparent;color:var(--hero-ink);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:500}
+.barbtn:hover{background:color-mix(in srgb,var(--hero-ink) 12%,transparent)}
+
+/* hero */
+.hero{background:var(--hero-bg);color:var(--hero-ink);padding:clamp(28px,5vw,64px) clamp(16px,4vw,40px) clamp(32px,5vw,56px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(24px,4vw,56px);align-items:end}
+.hero .aud{font-size:14px;font-weight:600;color:var(--hero-muted);margin-bottom:14px}
+.hero h1{font-size:clamp(34px,5.4vw,62px);font-weight:800;letter-spacing:-.035em;max-width:14ch}
+.hero .sub{font-size:clamp(16px,1.6vw,19px);color:var(--hero-muted);max-width:56ch;margin:18px 0 0}
+.hero .facts{margin-top:22px;font-size:14px;color:var(--hero-ink);display:flex;flex-wrap:wrap;gap:8px}
+.hero .facts span{border:1px solid color-mix(in srgb,var(--hero-ink) 30%,transparent);border-radius:999px;padding:5px 12px}
+.live{background:var(--surface);color:var(--ink);border-radius:18px;padding:18px 18px 14px;box-shadow:0 20px 50px -24px rgba(20,8,70,.55)}
+.live h2{font-size:15px;font-weight:700;margin-bottom:12px}
+.mx{display:grid;grid-template-columns:minmax(90px,1.3fr) repeat(var(--n),minmax(0,1fr));gap:4px;font-size:12px}
+.mx .hd{font-weight:600;color:var(--muted);text-align:center;padding-bottom:2px}
+.mx .rl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:6px 6px 6px 0;color:var(--ink);font-weight:500}
+.mx .rl.ph{color:var(--muted);font-weight:400;font-style:italic}
+.mx .c{border-radius:6px;background:var(--sunk);border:1px dashed var(--line);min-height:28px;transition:background .35s}
+.mx .c.on{border:0}
+.live .cap{font-size:12.5px;color:var(--muted);margin:12px 0 0}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:250px minmax(0,1fr);gap:clamp(24px,4vw,56px);padding:clamp(24px,4vw,48px) clamp(16px,4vw,40px) 80px;max-width:1240px;margin:0 auto}
+.wrap>*{min-width:0}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start}
+.rail h2{font-size:13px;font-weight:600;color:var(--muted);font-family:var(--sans);margin-bottom:10px}
+.agenda{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
+.agenda button{display:grid;grid-template-columns:26px 1fr;gap:8px;width:100%;text-align:left;border:0;background:none;color:var(--muted);padding:9px 8px 9px 12px;margin-left:-2px;border-left:2px solid transparent;font-size:14px;line-height:1.35}
+.agenda .n{font-family:var(--display);font-weight:700;color:var(--muted)}
+.agenda .m{display:block;font-size:12px;opacity:.8;margin-top:2px}
+.agenda button:hover{color:var(--ink)}
+.agenda button[aria-current="step"]{color:var(--ink);border-left-color:var(--violet);font-weight:600}
+.agenda button[aria-current="step"] .n{color:var(--violet)}
+.meter{margin-top:24px;padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.meter b{font-family:var(--display);font-size:22px}
+.meter p{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.track{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.track i{display:block;height:100%;background:linear-gradient(90deg,var(--turq),var(--violet));border-radius:99px;transition:width .4s}
+
+/* step */
+.step{max-width:820px}
+.kick{font-size:14px;color:var(--muted);font-weight:500;margin-bottom:8px}
+.step>h2{font-size:clamp(28px,3.6vw,40px);font-weight:800;letter-spacing:-.03em;margin-bottom:18px}
+.lead{font-size:18px;line-height:1.6;max-width:66ch}
+.prose{max-width:68ch}
+.prose h3{font-size:20px;margin:30px 0 10px}
+.prose ul,.prose ol{padding-left:1.2em;margin:0 0 1em}
+.prose li{margin:.35em 0}
+.prose li::marker{color:var(--violet)}
+.map{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:15px}
+.map th{font-family:var(--display);font-size:13px;text-align:left;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:2px solid var(--line)}
+.map td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.map td:last-child{font-weight:600;color:var(--violet-ink)}
+.tablewrap{overflow-x:auto}
+.types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:6px 0 18px}
+.types div{padding:16px;border-top:4px solid var(--violet);background:var(--surface);border-radius:4px 4px 12px 12px}
+.types div:nth-child(2){border-color:var(--turq)}
+.types div:nth-child(3){border-color:var(--l2)}
+.types h4{font-size:16px;margin-bottom:6px}
+.types p{font-size:14.5px;color:var(--muted);margin:0}
+.ex{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:6px;margin:8px 0 6px}
+.ex div{padding:12px;border-radius:10px;font-size:14px;line-height:1.45}
+.ex b{display:block;font-family:var(--display);font-size:13px;margin-bottom:4px}
+.ex div:nth-child(1){background:var(--l1);color:#1B1640}
+.ex div:nth-child(2){background:var(--l2);color:#1B1640}
+.ex div:nth-child(3){background:var(--l3);color:#fff}
+.ex div:nth-child(4){background:var(--l4);color:#fff}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 18px}
+.pair div{padding:12px 14px;border-radius:10px;font-size:15px}
+.pair .no{background:var(--warn-soft)}
+.pair .si{background:var(--turq-soft)}
+.pair b{display:block;font-size:12.5px;font-weight:600;margin-bottom:2px}
+.formula{font-family:var(--display);font-weight:600;font-size:17px;padding:14px 16px;border-radius:12px;background:var(--violet-soft);color:var(--violet-ink);margin:8px 0 16px}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0 16px}
+.compare div{padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.compare h4{font-size:16px;margin-bottom:6px}
+.compare .scale{font-size:13px;color:var(--violet-ink);font-weight:600;margin-bottom:8px}
+.compare p{font-size:14.5px;color:var(--muted);margin:0}
+
+/* workbench */
+.wb{margin:28px 0;padding:clamp(18px,3vw,26px);background:var(--surface);border:1px solid var(--line);border-radius:16px;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:18px 18px;background-position:-9px -9px}
+.wb>*{position:relative}
+.wb-h{margin-bottom:16px;background:var(--surface);padding:2px 0}
+.tag{display:inline-block;font-size:12px;font-weight:600;color:var(--turq-ink);background:var(--turq-soft);padding:3px 10px;border-radius:999px;margin-bottom:8px}
+.wb-h h3{font-size:21px;margin-bottom:4px}
+.wb-h p{color:var(--muted);font-size:15px;margin:0;max-width:62ch}
+.f{display:block;margin:0 0 12px}
+.fl{display:block;font-size:13.5px;font-weight:600;margin-bottom:5px}
+.fh{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.in,textarea.in,select.in{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+textarea.in{resize:vertical;line-height:1.5}
+.in:focus{border-color:var(--violet);outline:2px solid color-mix(in srgb,var(--violet) 30%,transparent);outline-offset:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:0 14px}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600}
+.btn:hover{border-color:var(--violet);color:var(--violet-ink)}
+.btn.add{border-style:dashed;color:var(--violet-ink)}
+.btn.primary{background:var(--violet);border-color:var(--violet);color:#fff}
+.btn.primary:hover{background:var(--violet-ink);color:#fff}
+.btn.ia-btn{background:var(--turq-soft);border-color:transparent;color:var(--turq-ink)}
+.btn.ia-btn:hover{border-color:var(--turq)}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.55;cursor:default}
+.x{border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1;width:34px;height:34px;border-radius:8px;flex:none}
+.x:hover{background:var(--warn-soft);color:var(--warn)}
+.empty{padding:16px;border-radius:10px;background:var(--sunk);color:var(--muted);font-size:14.5px}
+.limit{font-size:14px;color:var(--muted);padding:10px 14px;border-radius:10px;background:var(--violet-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;font-size:14px;color:var(--muted)}
+.levels{list-style:none;margin:0 0 12px;padding:0}
+.lv{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.lvn{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:15px}
+.lvb{flex:1;display:grid;gap:6px}
+.lv1{background:var(--l1);color:#1B1640}.lv2{background:var(--l2);color:#1B1640}.lv3{background:var(--l3);color:#fff}
+.lv4{background:var(--l4);color:#fff}.lv5{background:var(--l5);color:#fff}.lv6{background:var(--l6);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 16px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:13px}
+.chip:hover{border-color:var(--violet);color:var(--violet-ink)}
+.comp{padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--surface)}
+.comp-top{display:grid;grid-template-columns:1.3fr 1fr auto;gap:8px;margin-bottom:8px}
+.badge{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:var(--turq-ink);background:var(--turq-soft);padding:2px 8px;border-radius:999px}
+.perfil{padding:16px;border:1px solid var(--line);border-radius:14px;margin-bottom:14px;background:var(--surface)}
+.perfil-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.perfil-h h4{font-size:17px}
+.ia{margin-top:6px;padding:12px;border-radius:12px;background:var(--sunk)}
+.ia .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ia .fh{margin:0}
+.sug{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14.5px}
+.sug:first-of-type{margin-top:10px}
+.sug p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.sug .why{font-size:13px;font-style:italic}
+.cat{font-size:12px;color:var(--violet-ink);background:var(--violet-soft);padding:1px 8px;border-radius:999px;margin-left:6px;font-weight:600}
+.done{font-size:13px;color:var(--ok);font-weight:600;white-space:nowrap;padding-top:6px}
+.msg{font-size:14px;color:var(--muted);margin-top:8px}
+.msg.err{color:var(--warn)}
+.asig{padding:14px 0;border-top:1px solid var(--line)}
+.asig h4{font-size:16px;margin-bottom:10px}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.ck{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px;font-size:14px;cursor:pointer;background:var(--surface)}
+.ck input{accent-color:var(--violet)}
+.ck:has(input:checked){border-color:var(--violet);background:var(--violet-soft);color:var(--violet-ink);font-weight:600}
+.beh{padding:16px 0;border-top:1px solid var(--line)}
+.beh:first-of-type{border-top:0}
+.beh-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}
+.beh-h h4{font-size:17px}
+.beh-h .fh{margin-top:2px;max-width:56ch}
+.behx{overflow-x:auto;padding-bottom:4px}
+.beh-grid{display:grid;grid-template-columns:repeat(var(--n),minmax(170px,1fr));gap:8px}
+.bc{display:flex;flex-direction:column;gap:4px}
+.bcl{font-size:12.5px;font-weight:600;padding:4px 8px;border-radius:6px}
+.bc textarea{font-size:14px;min-height:96px}
+.urow{display:grid;grid-template-columns:1.2fr 1.2fr 1fr auto;gap:8px;margin-bottom:8px}
+.checklist{list-style:none;padding:0;margin:0}
+.checklist li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.checklist li:first-child{border-top:0}
+.checklist input{margin-top:5px;width:18px;height:18px;accent-color:var(--turq);flex:none}
+.ready-top{display:flex;align-items:center;gap:18px;margin-bottom:14px}
+.ready-top b{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:-.03em;color:var(--violet-ink)}
+.ready-top .track{flex:1;height:12px}
+.rlist{list-style:none;padding:0;margin:0 0 18px}
+.rlist li{display:flex;gap:10px;padding:7px 0;font-size:15px}
+.rlist .ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.rlist .ok .ic{background:var(--turq-soft);color:var(--ok)}
+.rlist .pend .ic{background:var(--warn-soft);color:var(--warn)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.rev{list-style:none;padding:0;margin:12px 0 0}
+.rev li{padding:10px 12px;border-radius:10px;margin-bottom:8px;font-size:14.5px}
+.rev li.ok{background:var(--turq-soft)}
+.rev li.ajuste{background:var(--warn-soft)}
+.rev b{display:block;font-size:13px;margin-bottom:2px}
+.tip{display:grid;grid-template-columns:44px 1fr;gap:14px;margin:30px 0;padding:18px 20px;border-radius:16px;background:var(--violet-soft);align-items:start}
+.blob{width:44px;height:44px;border-radius:58% 42% 52% 48% / 52% 58% 42% 48%;background:var(--violet);position:relative}
+.blob::before,.blob::after{content:"";position:absolute;top:17px;width:6px;height:8px;border-radius:50%;background:#fff}
+.blob::before{left:14px}.blob::after{left:24px}
+.tip h4{font-size:16px;color:var(--violet-ink);margin-bottom:4px}
+.tip p{margin:0;font-size:15.5px}
+details.fac{margin:22px 0;border:1px dashed var(--line);border-radius:12px;padding:12px 16px;background:var(--surface)}
+details.fac summary{cursor:pointer;font-weight:600;font-size:14.5px;color:var(--muted)}
+details.fac[open] summary{margin-bottom:8px}
+details.fac p,details.fac li{font-size:14.5px}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:36px;padding-top:20px;border-top:1px solid var(--line)}
+.nav .btn{max-width:48%}
+textarea.out{width:100%;min-height:260px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;margin-top:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .wrap{grid-template-columns:1fr}
+  .rail{position:static}
+  .agenda{display:flex;overflow-x:auto;border-left:0;border-bottom:2px solid var(--line);gap:4px}
+  .agenda li{flex:none}
+  .agenda button{border-left:0;border-bottom:2px solid transparent;margin:0 0 -2px;padding:8px 10px;grid-template-columns:auto auto}
+  .agenda button[aria-current="step"]{border-bottom-color:var(--violet)}
+  .agenda .m{display:none}
+  .meter{display:none}
+  .types,.compare{grid-template-columns:1fr}
+}
+@media (max-width:620px){
+  .grid2,.grid3,.pair{grid-template-columns:1fr}
+  .comp-top{grid-template-columns:1fr auto}
+  .comp-top .in:nth-child(2){grid-column:1}
+  .urow{grid-template-columns:1fr auto}
+  .urow>*:nth-child(2),.urow>*:nth-child(3){grid-column:1}
+  .ex{grid-template-columns:1fr 1fr}
+  .brand small{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="brand">lapzo<small>Desarrollo por Competencias</small></div>
+  <div class="sp"></div>
+  <div class="seg" role="group" aria-label="Cantidad de perfiles">
+    <button data-act="modo" data-v="sesion">Taller (hasta 3 perfiles)</button>
+    <button data-act="modo" data-v="todos">Todos mis perfiles</button>
+  </div>
+  <button class="barbtn" data-act="example" data-label="Cargar ejemplo">Cargar ejemplo</button>
+  <button class="barbtn" data-act="reset" data-label="Empezar de cero">Empezar de cero</button>
+</div>
+<header class="hero">
+  <div>
+    <p class="aud" id="aud"></p>
+    <h1 id="ttl"></h1>
+    <p class="sub" id="sub"></p>
+    <div class="facts" id="facts"></div>
+  </div>
+  <aside class="live" aria-label="Vista previa de tu matriz">
+    <h2>Tu matriz, en vivo</h2>
+    <div id="mx"></div>
+    <p class="cap" id="mxcap"></p>
+  </aside>
+</header>
+<div class="wrap">
+  <nav class="rail" aria-label="Agenda del taller">
+    <h2>Agenda del taller</h2>
+    <ol class="agenda" id="agenda"></ol>
+    <div class="meter"><b id="pct">0 %</b><p>de tu insumo listo para cargar en Lapzo</p><div class="track"><i id="bar" style="width:0"></i></div></div>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<script>
+const PREP_BASE = [
+  ["roles","Cada puesto en <b>Roles</b> tiene nombre claro, descripción completa y, si aplica, su nivel de contribución."],
+  ["ous","Las OUs en <b>Organización</b> tienen la jerarquía y el líder correctos."],
+  ["usuarios","Cada usuario tiene asignados su OU, rol, jefe directo y propiedades."],
+  ["ia","Las funciones de IA están habilitadas. Si aún no cuentas con ellas, solicítalas a tu Activation Specialist o Account Executive."]
+];
+const COPY_BASE = {
+  org:{t:"Datos de la sesión",d:"Esta información aparece en la portada de tu insumo."},
+  prep:{t:"Lista de verificación",d:"Marca lo que ya tienes listo. Lo pendiente lo revisamos al inicio de la sesión."},
+  perfiles:{t:"Perfiles de práctica",d:"Captura hasta 3 puestos. Usa el nombre del rol tal como existe en Lapzo para que la carga sea directa."},
+  asignacion:{t:"Nivel esperado y competencias por perfil",d:"Indica en qué nivel del marco debe estar cada puesto y qué competencias se le evaluarán.",missing:""},
+  comportamientos:{t:"Comportamientos por nivel",d:"Para cada competencia, describe qué hace una persona en cada nivel. Esto es lo que LIA usará para generar las preguntas de tu diagnóstico.",missing:""},
+  usuarios:{t:"Usuarios de prueba",d:"Elige de 3 a 5 colaboradores para asignar la matriz y probar el diagnóstico antes de lanzarlo a toda la organización."},
+  diagnostico:{t:"Decisiones de tu primer diagnóstico",d:"Define la configuración ahora para que en la plataforma solo tengas que capturarla."},
+  cierre:{t:"Bloqueos y siguiente paso",d:"Si algo te detiene, lo dejamos por escrito con su solución, responsable y fecha."},
+  resumen:{t:"Tu insumo para Lapzo",d:"Revisa qué tan completo está y descárgalo en Excel: una hoja por elemento, lista para capturar en la plataforma."},
+  revision:{t:"Revisión rápida con IA",d:"Pide una segunda opinión sobre claridad, progresión entre niveles y comportamientos observables. Es una guía, no un dictamen: tú decides qué ajustar."}
+};
+const USES = `<ul>
+<li><b>Medir la brecha:</b> compara el nivel real de cada colaborador contra el nivel esperado en su matriz.</li>
+<li><b>Priorizar el desarrollo:</b> muestra qué competencias necesitan atención y en quién, para enfocar la capacitación.</li>
+<li><b>Hablar el mismo idioma:</b> líderes y colaboradores ven las mismas expectativas, escritas como comportamientos.</li>
+<li><b>Dar continuidad:</b> los resultados alimentan planes de desarrollo y decisiones de talento como promociones o sucesión.</li>
+</ul>`;
+
+const GUIDE = {
+  id:"sin-modelo",
+  title:"Construyamos tu modelo de competencias",
+  audience:"Guía de taller para administradores que aún no tienen un modelo de competencias",
+  sub:"Entendemos qué es un modelo de competencias y para qué le sirve a tu empresa, y lo construimos juntos a partir de hasta 3 puestos reales para que salgas con tu matriz inicial lista para Lapzo.",
+  facts:["50 minutos","Hasta 3 perfiles en la sesión","Sales con tu insumo en Excel"],
+  estadoLabel:"Estado de tu modelo",
+  estados:["Estamos construyéndolo","No contamos con uno todavía"],
+  presets:true, libreria:true, iaPerfil:true,
+  prep: PREP_BASE.concat([
+    ["docs","Tienes a la mano de 1 a 3 descripciones de puesto, aunque estén incompletas."],
+    ["pruebas","Pensaste en 3 a 5 colaboradores de prueba de esos puestos."]
+  ]),
+  copy: Object.assign({}, COPY_BASE, {
+    marco:{t:"Tu marco",d:"Elige una escala base y ajusta los nombres y definiciones a tu lenguaje. Usa una sola escala para toda la matriz."},
+    competencias:{t:"Tu catálogo de competencias",d:"Agrega competencias desde la lista base o escríbelas tú. Cada una necesita categoría y definición.",empty:"Tu catálogo está vacío. Parte de la lista base o agrega tus propias competencias."},
+    asignacion:Object.assign({},COPY_BASE.asignacion,{missing:"Captura tus competencias en el paso 2 y tu marco en el paso 3."}),
+    comportamientos:Object.assign({},COPY_BASE.comportamientos,{missing:"Agrégalas en el paso 2."})
+  }),
+  steps:[
+    {t:"Antes de la sesión",min:"Previo",
+     lead:"No necesitas tener un modelo para este taller, pero sí una estructura organizacional en orden y algunos puestos para trabajar. Revisa esta lista antes de conectarte.",
+     blocks:["org","prep"],
+     tip:"Completa las descripciones de tus roles y OUs de forma detallada. Entre más clara sea esta información, mejores resultados obtendrás con las herramientas de inteligencia artificial de la plataforma."},
+    {t:"¿Qué es un modelo de competencias?",min:"10 minutos",
+     lead:"Un modelo de competencias describe, con un lenguaje común, qué necesita saber hacer y cómo debe actuar cada persona para tener éxito en su puesto. No es un documento para archivar: es la base para medir, desarrollar y tomar decisiones sobre tu talento.",
+     html:`<p>Una <b>competencia</b> es una combinación de conocimientos, habilidades y actitudes que se nota en lo que la persona hace. Por eso la describimos con comportamientos que un líder puede observar.</p>
+<h3>Tres tipos de competencias</h3>
+<div class="types"><div><h4>Organizacionales</h4><p>Aplican a todas las personas y reflejan la cultura de tu empresa. Ej. Orientación al cliente.</p></div>
+<div><h4>Técnicas o funcionales</h4><p>Dependen del área o del puesto. Ej. Negociación, Pensamiento analítico.</p></div>
+<div><h4>De liderazgo</h4><p>Para puestos con personas a cargo. Ej. Desarrollo de personas.</p></div></div>
+<h3>Las tres piezas que construiremos en Lapzo</h3>
+<ol><li><b>Competencias:</b> las habilidades o conocimientos que el puesto necesita, organizadas por categoría.</li>
+<li><b>Marco:</b> los niveles con los que medirás el dominio, por ejemplo Principiante, Intermedio, Avanzado y Experto.</li>
+<li><b>Matriz:</b> cruza competencias con niveles, describe el comportamiento esperado en cada uno y se asigna a los colaboradores.</li></ol>
+<p>Así se ve una competencia dentro de una matriz:</p>
+<div class="tablewrap"><div class="ex"><div><b>1. Principiante</b>Comparte información con su equipo cuando se le solicita.</div><div><b>2. Intermedio</b>Expone sus ideas de forma clara y confirma que fueron entendidas.</div><div><b>3. Avanzado</b>Adapta su mensaje a cada audiencia y facilita conversaciones difíciles.</div><div><b>4. Experto</b>Define prácticas de comunicación para el área y forma a otros en ellas.</div></div></div>
+<p class="fh">Comunicación efectiva, descrita en cuatro niveles.</p>
+<h3>Para qué le sirve a tu empresa</h3>${USES}`,
+     tip:"Antes de comenzar, define qué competencias son realmente importantes para tu organización y cómo quieres medir su progresión. Pocas competencias bien definidas funcionan mejor que una lista larga.",
+     fac:`<p>Pregunta de apertura: <b>si mañana tuvieras que explicar qué hace exitoso a alguien en tu empresa, ¿qué dirías?</b> Anota las respuestas: son candidatas a competencias organizacionales.</p><p>Usa <b>Cargar ejemplo</b> para mostrar cómo luce un modelo terminado antes de empezar a construir el suyo.</p>`},
+    {t:"Del puesto a las competencias",min:"12 minutos",
+     lead:"La forma más sencilla de construir tu modelo es partir de puestos reales. Captura hasta 3 perfiles con su descripción y, a partir de ellos, identifica las competencias que necesitan.",
+     html:`<h3>Cuatro preguntas para leer una descripción de puesto</h3><ol>
+<li>¿Para qué existe el puesto?</li>
+<li>¿Qué resultados se le piden?</li>
+<li>¿Qué tiene que saber hacer muy bien para lograrlos? Aquí aparecen las competencias técnicas.</li>
+<li>¿Cómo tiene que comportarse con su equipo, sus clientes y su líder? Aquí aparecen las organizacionales y, si tiene gente a cargo, las de liderazgo.</li></ol>
+<p><b>Regla práctica:</b> de 4 a 6 competencias por perfil. Varias se repetirán entre puestos; eso es bueno, porque tu catálogo se mantiene corto y comparable.</p>`,
+     blocks:["perfiles","competencias"],
+     tip:"También puedes apoyarte en la librería de competencias de lapzo dentro de la plataforma: parte de una definición existente y ajústala a tu lenguaje.",
+     fac:`<p>Pregunta detonadora: <b>¿Qué información te falta para definir tu modelo?</b></p><p>Si no hay descripciones de puesto, construye la descripción en voz alta con las cuatro preguntas y márcala como pendiente de validar con el área. Revisa que las sugerencias de IA se ajusten al lenguaje de la empresa antes de agregarlas.</p>`},
+    {t:"Define tus niveles y comportamientos",min:"13 minutos",
+     lead:"El marco define los niveles con los que medirás cada competencia. Después, para cada competencia, describes qué hace una persona en cada nivel.",
+     html:`<h3>Elige tu escala</h3><div class="compare">
+<div><h4>Por dominio</h4><p class="scale">Principiante, Intermedio, Avanzado, Experto</p><p>Mide qué tan bien domina la persona la competencia, sin importar su puesto. Funciona bien para competencias técnicas y para comparar personas de distintas áreas.</p></div>
+<div><h4>Por nivel de mando</h4><p class="scale">Contribuidor individual, Coordinación, Gerencia, Dirección</p><p>Usa la responsabilidad del puesto como referencia: lo esperado crece conforme crece el alcance. Funciona bien si tu estructura de puestos es clara.</p></div></div>
+<h3>Cómo escribir un comportamiento</h3>
+<p class="formula">Verbo en presente + qué hace + cómo o con qué resultado</p>
+<div class="pair"><div class="no"><b>Evita</b>Es buen comunicador.</div><div class="si"><b>Mejor</b>Explica los objetivos del proyecto a su equipo y confirma que todos entendieron sus responsabilidades.</div></div>
+<div class="pair"><div class="no"><b>Evita</b>Tiene actitud de servicio.</div><div class="si"><b>Mejor</b>Responde las solicitudes del cliente en menos de 24 horas y da seguimiento hasta cerrarlas.</div></div>
+<p>Cada nivel debe exigir algo más que el anterior: más autonomía, más complejidad o más impacto en otros.</p>`,
+     blocks:["marco","comportamientos"],
+     tip:"Define con precisión los comportamientos de cada nivel. Si dos niveles se leen casi igual, ni la persona evaluada ni LIA podrán distinguirlos al generar las preguntas.",
+     fac:`<p>Si el grupo se atora en la redacción, usa <b>Proponer con IA</b> (si está disponible en la vista) o el ejemplo de la guía y trabajen sobre el borrador: es más fácil corregir que escribir desde cero. Pide que cada administrador lea en voz alta un comportamiento y que el grupo diga si podría observarlo en su día a día.</p>`},
+    {t:"Arma tu matriz y tu diagnóstico",min:"10 minutos",
+     lead:"Ahora conectamos todo: en qué nivel debe estar cada perfil, qué competencias le aplican y quiénes probarán la matriz. En la plataforma puedes capturarlo de forma manual (primero competencias, después marcos y matrices) o con el Modo IA en Desarrollo, donde LIA toma tus roles y OUs como referencia.",
+     blocks:["asignacion","usuarios","diagnostico"],
+     tip:"Sé específico al indicar a LIA el objetivo, el área y las necesidades de tu matriz. Entre más claro sea el contexto, más alineada será la propuesta que genere.",
+     fac:`<p>Pregunta detonadora: <b>¿Qué te impediría asignar el diagnóstico a tus colaboradores?</b> Identifica permisos, usuarios faltantes o aprobaciones internas.</p><p>Para la configuración del diagnóstico, sugiere empezar con el grupo de prueba y un periodo corto.</p>`},
+    {t:"Tu modelo, con Lapzo como socio",min:"5 minutos",
+     lead:"Hoy construiste la primera versión de tu modelo. Completar el resto no es algo que tengas que hacer solo: en Lapzo te acompañamos para extenderlo a todos tus puestos, validar los comportamientos y cargarlo en la plataforma.",
+     html:`<h3>Cómo podemos acompañarte</h3><ul>
+<li><b>Sesión 1:1</b> para completar tus perfiles restantes con esta misma guía, en modo <b>Todos mis perfiles</b>.</li>
+<li><b>Revisión de tu modelo</b> antes de la carga: definiciones, niveles y comportamientos.</li>
+<li><b>Configuración guiada</b> de tu primer diagnóstico y de su lanzamiento.</li></ul>`,
+     blocks:["revision","resumen","cierre"],
+     fac:`<p>Pregunta detonadora: <b>¿Qué necesitas resolver para lanzar tu primer DxC?</b></p><p>Clasifica el bloqueo (Estructura, Conocimiento, Configuración o Gestión interna) y agenda la sesión 1:1 antes de terminar la llamada. Para este público, casi siempre el siguiente paso es completar perfiles con acompañamiento.</p>`}
+  ]
+};
+
+GUIDE.steps.forEach(s=>{delete s.fac;});
+
+</script>
+<script>
+(function(){
+"use strict";
+const G = GUIDE;
+const KEY = "dxc-taller-" + G.id + "-v1";
+const LV_COLORS = ["var(--l1)","var(--l2)","var(--l3)","var(--l4)","var(--l5)","var(--l6)"];
+const PRESETS = {
+  dominio:{nombre:"Marco de dominio", niveles:[
+    {nombre:"Principiante", desc:"Conoce los conceptos básicos y los aplica con guía y supervisión cercana."},
+    {nombre:"Intermedio", desc:"Aplica la competencia de forma autónoma en las situaciones habituales de su puesto."},
+    {nombre:"Avanzado", desc:"Resuelve situaciones complejas y sirve de apoyo para otras personas."},
+    {nombre:"Experto", desc:"Es referente en la organización: mejora las prácticas y desarrolla a otros."}]},
+  mando:{nombre:"Marco por nivel de mando", niveles:[
+    {nombre:"Contribuidor individual", desc:"Ejecuta su trabajo con autonomía y cumple sus propios objetivos."},
+    {nombre:"Coordinación", desc:"Organiza el trabajo de un grupo pequeño y da seguimiento a sus resultados."},
+    {nombre:"Gerencia", desc:"Dirige un área, alinea a sus equipos con los objetivos y desarrolla a sus líderes."},
+    {nombre:"Dirección", desc:"Define la estrategia, toma decisiones de alto impacto y construye cultura."}]}
+};
+const LIB = [
+  ["Comunicación efectiva","Organizacionales","Transmite ideas de forma clara, escucha activamente y adapta su mensaje a cada audiencia."],
+  ["Trabajo en equipo","Organizacionales","Colabora con otras personas y áreas para lograr objetivos comunes."],
+  ["Orientación a resultados","Organizacionales","Se compromete con metas retadoras y da seguimiento constante hasta lograrlas."],
+  ["Orientación al cliente","Organizacionales","Entiende las necesidades del cliente y actúa para generar soluciones que le den valor."],
+  ["Adaptabilidad","Organizacionales","Ajusta su forma de trabajar ante cambios, nuevas prioridades o situaciones inesperadas."],
+  ["Solución de problemas","Técnicas","Analiza situaciones, identifica sus causas y aplica soluciones efectivas."],
+  ["Planeación y organización","Técnicas","Define prioridades, organiza recursos y cumple los plazos acordados."],
+  ["Pensamiento analítico","Técnicas","Interpreta datos e información para fundamentar sus propuestas y decisiones."],
+  ["Negociación","Técnicas","Logra acuerdos que benefician a ambas partes cuidando la rentabilidad y la relación."],
+  ["Liderazgo de equipos","Liderazgo","Guía, motiva y desarrolla a su equipo para alcanzar los objetivos."],
+  ["Toma de decisiones","Liderazgo","Elige alternativas con base en información y asume la responsabilidad de sus consecuencias."],
+  ["Desarrollo de personas","Liderazgo","Impulsa el crecimiento de su equipo con retroalimentación y oportunidades de aprendizaje."]
+];
+const CATS = ["Organizacionales","Liderazgo","Técnicas"];
+
+function uid(){return Math.random().toString(36).slice(2,9);}
+function newPerfil(){return {id:uid(),puesto:"",area:"",reporta:"",contribucion:"",equipo:"",desc:"",resp:"",nivel:"",comps:[]};}
+function blank(){return {modo:"sesion",org:{empresa:"",responsable:"",fecha:"",estado:""},prep:{},
+  marco:{nombre:"",niveles:[{nombre:"",desc:""},{nombre:"",desc:""},{nombre:"",desc:""},{nombre:"",desc:""}]},
+  competencias:[],perfiles:[newPerfil()],matriz:{nombre:""},usuarios:[],
+  diag:{comps:[],banco:"ia",preguntas:"",aprobacion:"",intentos:"",tiempo:"",inicio:"",fin:"",directo:"",feedback:""},
+  cierre:{momento:"",tipo:"",bloqueo:"",solucion:"",paso:"",responsable:"",fecha:"",unoauno:""}};}
+function load(){try{const r=localStorage.getItem(KEY);if(!r)return null;const s=JSON.parse(r);return Object.assign(blank(),s);}catch(e){return null;}}
+let S = load() || blank();
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}},300);}
+
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function getPath(p){return p.split(".").reduce((o,k)=>o==null?undefined:o[k],S);}
+function setPath(p,v){const ks=p.split(".");let o=S;for(let i=0;i<ks.length-1;i++){if(o[ks[i]]==null)o[ks[i]]=/^\d+$/.test(ks[i+1])?[]:{};o=o[ks[i]];}o[ks[ks.length-1]]=v;}
+function inp(k,ph,o){o=o||{};const v=getPath(k);return `<input class="in" data-k="${k}" value="${esc(v==null?"":v)}" placeholder="${esc(ph)}" aria-label="${esc(o.label||ph)}"${o.r?' data-r="1"':''}${o.list?` list="${o.list}"`:''}${o.type?` type="${o.type}"`:''}${o.min!=null?` min="${o.min}"`:''}>`;}
+function ta(k,ph,o){o=o||{};const v=getPath(k);return `<textarea class="in" data-k="${k}" rows="${o.rows||3}" placeholder="${esc(ph)}" aria-label="${esc(o.label||ph)}"${o.r?' data-r="1"':''}>${esc(v==null?"":v)}</textarea>`;}
+function sel(k,opts,o){o=o||{};const v=String(getPath(k)==null?"":getPath(k));return `<select class="in" data-k="${k}" aria-label="${esc(o.label||"")}"${o.r?' data-r="1"':''}>${opts.map(([val,l])=>`<option value="${esc(val)}"${String(val)===v?" selected":""}>${esc(l)}</option>`).join("")}</select>`;}
+function field(label,ctrl,hint){return `<label class="f"><span class="fl">${label}</span>${ctrl}${hint?`<span class="fh">${hint}</span>`:""}</label>`;}
+function head(key){const c=G.copy[key];return `<header class="wb-h"><span class="tag">Ejercicio</span><h3>${c.t}</h3><p>${c.d}</p></header>`;}
+const named=()=>S.competencias.filter(c=>c.nombre.trim());
+const perfilesN=()=>S.perfiles.filter(p=>p.puesto.trim());
+const lvName=(n,j)=>n.nombre.trim()||("Nivel "+(j+1));
+function maxPerfiles(){return S.modo==="sesion"?3:999;}
+
+/* ---------- capabilities ---------- */
+let sampleFn=null, dl=null;
+const CL = (window.claude && typeof window.claude.use==="function") ? window.claude : null;
+if(CL){
+  CL.use("sample").then(s=>{sampleFn=s||null;if(sampleFn&&typeof go==="function")go(cur,false);}).catch(()=>{});
+  CL.use("downloads").then(d=>{dl=d||null;}).catch(()=>{});
+}
+const AIERR={not_granted:"No se autorizó el uso de IA en esta vista. Puedes continuar capturando de forma manual.",rate_limited:"Hay muchas solicitudes en curso. Espera unos segundos e inténtalo de nuevo."};
+function aiErr(e){return AIERR[e&&e.code]||"No fue posible obtener la propuesta. Continúa de forma manual o inténtalo más tarde.";}
+
+/* ---------- transient AI state ---------- */
+const sug={}; const behAI={}; let review=null; let dlMsg=""; let showText=false;
+
+/* ---------- blocks ---------- */
+const B={};
+B.org=()=>head("org")+`<div class="grid2">${field("Empresa",inp("org.empresa","Nombre de tu organización"))}${field("Responsable del modelo",inp("org.responsable","Nombre y puesto"))}</div>
+<div class="grid2">${field("Fecha de la sesión",inp("org.fecha","",{type:"date",label:"Fecha de la sesión"}))}${field(G.estadoLabel,sel("org.estado",[["","Selecciona"]].concat(G.estados.map(e=>[e,e])),{label:G.estadoLabel}))}</div>`;
+
+B.prep=()=>head("prep")+`<ul class="checklist">${G.prep.map(([k,t])=>`<li><input type="checkbox" id="pp-${k}" data-act="prep" data-v="${k}"${S.prep[k]?" checked":""}><label for="pp-${k}">${t}</label></li>`).join("")}</ul>`;
+
+B.marco=()=>{const m=S.marco;
+  return head("marco")+(G.presets?`<div class="presets"><span>Partir de una escala base:</span><button class="btn sm" data-act="preset" data-v="dominio">Dominio (Principiante a Experto)</button><button class="btn sm" data-act="preset" data-v="mando">Nivel de mando</button></div>`:"")+
+  field("Nombre del marco",inp("marco.nombre","Ej. Marco de dominio de 4 niveles"))+
+  `<ol class="levels">${m.niveles.map((n,i)=>`<li class="lv"><span class="lvn lv${i+1}" aria-hidden="true">${i+1}</span><div class="lvb">${inp(`marco.niveles.${i}.nombre`,"Nombre del nivel "+(i+1),{r:1})}${ta(`marco.niveles.${i}.desc`,"Definición general: qué caracteriza a una persona en este nivel",{rows:2})}</div>${m.niveles.length>2?`<button class="x" data-act="delNivel" data-i="${i}" aria-label="Quitar nivel ${i+1}">×</button>`:""}</li>`).join("")}</ol>`+
+  (m.niveles.length<6?`<button class="btn add" data-act="addNivel">Agregar nivel</button>`:`<p class="fh">Llegaste al máximo recomendado de 6 niveles.</p>`);};
+
+B.competencias=()=>{const have=new Set(S.competencias.map(c=>c.nombre.trim().toLowerCase()));
+  const cats=Array.from(new Set(CATS.concat(S.competencias.map(c=>c.cat.trim()).filter(Boolean))));
+  const lib=G.libreria?LIB.filter(l=>!have.has(l[0].toLowerCase())):[];
+  return head("competencias")+
+  (lib.length?`<p class="fl">Lista base para empezar</p><div class="chips">${lib.map(l=>`<button class="chip" data-act="addLib" data-n="${esc(l[0])}">+ ${esc(l[0])}</button>`).join("")}</div>`:"")+
+  `<datalist id="cats">${cats.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`+
+  (S.competencias.length?S.competencias.map((c,i)=>`<div class="comp"><div class="comp-top">${inp(`competencias.${i}.nombre`,"Nombre de la competencia",{r:1})}${inp(`competencias.${i}.cat`,"Categoría",{list:"cats",r:1})}<button class="x" data-act="delComp" data-i="${i}" aria-label="Quitar competencia">×</button></div>${ta(`competencias.${i}.desc`,"Definición: qué significa esta competencia en tu organización",{rows:2})}${c.ia?'<span class="badge">Propuesta por IA: revísala y ajústala a tu lenguaje</span>':""}</div>`).join(""):`<p class="empty">${G.copy.competencias.empty}</p>`)+
+  `<button class="btn add" data-act="addComp">Agregar competencia</button>`;};
+
+function iaPerfil(p){
+  if(!G.iaPerfil||!sampleFn)return "";
+  const s=sug[p.id];
+  let body="";
+  if(s&&s.loading)body=`<p class="msg">Analizando el perfil…</p>`;
+  else if(s&&s.error)body=`<p class="msg err">${esc(s.error)}</p>`;
+  else if(s&&s.items)body=s.items.map((it,j)=>`<div class="sug"><div><b>${esc(it.nombre)}</b><span class="cat">${esc(it.categoria||"")}</span><p>${esc(it.descripcion)}</p>${it.motivo?`<p class="why">${esc(it.motivo)}</p>`:""}</div>${it.added?'<span class="done">Agregada</span>':`<button class="btn sm" data-act="acceptSug" data-id="${p.id}" data-j="${j}">Agregar</button>`}</div>`).join("");
+  return `<div class="ia"><div class="row"><button class="btn ia-btn sm" data-act="iaComps" data-id="${p.id}"${s&&s.loading?" disabled":""}>Sugerir competencias con IA</button><span class="fh">Se basa en la descripción y responsabilidades que capturaste.</span></div>${body}</div>`;
+}
+B.perfiles=()=>head("perfiles")+S.perfiles.map((p,i)=>`<div class="perfil"><div class="perfil-h"><h4>Perfil ${i+1}${p.puesto.trim()?": "+esc(p.puesto):""}</h4>${S.perfiles.length>1?`<button class="x" data-act="delPerfil" data-i="${i}" aria-label="Quitar perfil ${i+1}">×</button>`:""}</div>
+<div class="grid2">${field("Puesto (nombre del rol en Lapzo)",inp(`perfiles.${i}.puesto`,"Ej. Ejecutivo de ventas",{r:1}))}${field("Área u OU",inp(`perfiles.${i}.area`,"Ej. Comercial"))}${field("Reporta a",inp(`perfiles.${i}.reporta`,"Ej. Supervisor de ventas"))}${field("Nivel de contribución o de mando",inp(`perfiles.${i}.contribucion`,"Ej. Contribuidor individual"))}</div>
+${field("¿Tiene personas a cargo?",sel(`perfiles.${i}.equipo`,[["","Selecciona"],["No","No"],["Sí","Sí"]],{label:"¿Tiene personas a cargo?"}))}
+${field("Descripción del puesto",ta(`perfiles.${i}.desc`,"¿Para qué existe el puesto y qué resultados se le piden?",{rows:3}))}
+${field("Responsabilidades principales",ta(`perfiles.${i}.resp`,"Escribe una por línea",{rows:3}))}
+${iaPerfil(p)}</div>`).join("")+
+(S.perfiles.length<maxPerfiles()?`<button class="btn add" data-act="addPerfil">Agregar perfil</button>`:`<p class="limit">En el taller trabajamos con hasta 3 perfiles. Cuando quieras capturar el resto, cambia a <b>Todos mis perfiles</b> en la barra superior.</p>`);
+
+B.asignacion=()=>{const nv=S.marco.niveles; const cs=named();
+  if(!cs.length||!nv.some(n=>n.nombre.trim()))return head("asignacion")+`<p class="empty">Para continuar necesitas al menos una competencia y los nombres de los niveles de tu marco. ${G.copy.asignacion.missing}</p>`;
+  return head("asignacion")+field("Nombre de la matriz",inp("matriz.nombre","Ej. Matriz Comercial"),"Si tus perfiles son de familias muy distintas, considera una matriz por familia.")+
+  S.perfiles.map((p,i)=>`<div class="asig"><h4>${esc(p.puesto.trim()||"Perfil "+(i+1))}</h4>${field("Nivel esperado en la matriz",sel(`perfiles.${i}.nivel`,[["","Selecciona un nivel"]].concat(nv.map((n,j)=>[String(j),(j+1)+". "+lvName(n,j)])),{r:1,label:"Nivel esperado"}))}
+  <span class="fl">Competencias que se le evaluarán</span><div class="checks">${cs.map(c=>`<label class="ck"><input type="checkbox" data-act="toggleComp" data-p="${i}" data-c="${c.id}"${p.comps.includes(c.id)?" checked":""}><span>${esc(c.nombre)}</span></label>`).join("")}</div></div>`).join("");};
+
+B.comportamientos=()=>{const nv=S.marco.niveles; const list=S.competencias.map((c,i)=>[c,i]).filter(([c])=>c.nombre.trim());
+  if(!list.length)return head("comportamientos")+`<p class="empty">Aún no tienes competencias capturadas. ${G.copy.comportamientos.missing}</p>`;
+  return head("comportamientos")+list.map(([c,i])=>{if(!Array.isArray(c.beh))c.beh=[];const st=behAI[c.id];
+    return `<div class="beh"><div class="beh-h"><div><h4>${esc(c.nombre)}</h4>${c.desc.trim()?`<p class="fh">${esc(c.desc)}</p>`:""}</div>${sampleFn?`<button class="btn ia-btn sm" data-act="iaBeh" data-id="${c.id}"${st&&st.loading?" disabled":""}>Proponer con IA</button>`:""}</div>
+    ${st&&st.loading?'<p class="msg">Redactando una propuesta…</p>':""}${st&&st.msg?`<p class="msg${st.err?" err":""}">${esc(st.msg)}</p>`:""}
+    <div class="behx"><div class="beh-grid" style="--n:${nv.length}">${nv.map((n,j)=>`<label class="bc"><span class="bcl lv${j+1}">${j+1}. ${esc(lvName(n,j))}</span>${ta(`competencias.${i}.beh.${j}`,"¿Qué hace la persona en este nivel?",{rows:4,label:c.nombre+", "+lvName(n,j)})}</label>`).join("")}</div></div></div>`;}).join("");};
+
+B.usuarios=()=>{const ps=perfilesN();
+  return head("usuarios")+(S.usuarios.length?S.usuarios.map((u,i)=>`<div class="urow">${inp(`usuarios.${i}.nombre`,"Nombre del colaborador")}${inp(`usuarios.${i}.correo`,"Correo o usuario en Lapzo")}${sel(`usuarios.${i}.perfil`,[["","Perfil"]].concat(ps.map(p=>[p.id,p.puesto])),{label:"Perfil"})}<button class="x" data-act="delUser" data-i="${i}" aria-label="Quitar usuario">×</button></div>`).join(""):`<p class="empty">Agrega de 3 a 5 colaboradores para probar la matriz antes de asignarla a toda tu organización.</p>`)+
+  `<button class="btn add" data-act="addUser">Agregar usuario de prueba</button>`;};
+
+B.diagnostico=()=>{const cs=named();
+  return head("diagnostico")+`<span class="fl">Competencias a evaluar</span>${cs.length?`<div class="checks" style="margin-bottom:14px">${cs.map(c=>`<label class="ck"><input type="checkbox" data-act="toggleDiag" data-c="${c.id}"${S.diag.comps.includes(c.id)?" checked":""}><span>${esc(c.nombre)}</span></label>`).join("")}</div>`:`<p class="empty">Captura tus competencias para elegir cuáles evaluar.</p>`}
+  ${field("Banco de preguntas",sel("diag.banco",[["ia","Generado con LIA y revisado por nosotros"],["manual","Manual"],["mixto","Mixto"]],{label:"Banco de preguntas"}))}
+  <div class="grid3">${field("Preguntas por usuario",inp("diag.preguntas","Ej. 10",{type:"number",min:1}))}${field("Porcentaje mínimo para aprobar",inp("diag.aprobacion","Ej. 80",{type:"number",min:0}))}${field("Intentos disponibles",inp("diag.intentos","Ej. 2",{type:"number",min:1}))}</div>
+  <div class="grid3">${field("Tiempo límite (minutos)",inp("diag.tiempo","Opcional",{type:"number",min:1}))}${field("Fecha de inicio",inp("diag.inicio","",{type:"date",label:"Fecha de inicio"}))}${field("Fecha de cierre",inp("diag.fin","",{type:"date",label:"Fecha de cierre"}))}</div>
+  ${field("Diagnóstico directo al nivel",sel("diag.directo",[["","Selecciona"],["Sí","Sí: evaluar a cada quien según su nivel asignado"],["No","No: evaluar todos los niveles"]],{label:"Diagnóstico directo al nivel"}))}
+  ${field("Feedback para el colaborador",ta("diag.feedback","Mensaje que verá al consultar sus resultados",{rows:2}))}`;};
+
+B.cierre=()=>head("cierre")+`<div class="grid2">${field("Momento más complejo",sel("cierre.momento",[["","Selecciona"],["Estructura","Estructura"],["Matriz","Matriz"],["IA","IA"],["Asignación","Asignación"],["Ninguno","Ninguno"]],{label:"Momento más complejo"}))}${field("Tipo de bloqueo",sel("cierre.tipo",[["","Selecciona"],["Estructura","Estructura: construir, completar o estandarizar el modelo"],["Conocimiento","Conocimiento: dudas sobre el flujo o el uso del módulo"],["Configuración","Configuración: dificultades técnicas o funcionales"],["Gestión interna","Gestión interna: depende de decisiones o autorizaciones"],["Sin bloqueo","Sin bloqueo"]],{label:"Tipo de bloqueo"}))}</div>
+${field("¿Qué te detiene?",ta("cierre.bloqueo","Describe el bloqueo principal",{rows:2}))}
+${field("Solución propuesta",ta("cierre.solucion","¿Qué haremos para resolverlo?",{rows:2}))}
+<div class="grid3">${field("Siguiente paso",inp("cierre.paso","Ej. Completar comportamientos"))}${field("Responsable",inp("cierre.responsable","Nombre"))}${field("Fecha compromiso",inp("cierre.fecha","",{type:"date",label:"Fecha compromiso"}))}</div>
+${field("¿Requiere sesión 1:1 con Lapzo?",sel("cierre.unoauno",[["","Selecciona"],["Sí","Sí"],["No","No"]],{label:"¿Requiere sesión 1:1?"}))}`;
+
+function readiness(){const nv=S.marco.niveles, cs=named(), ps=perfilesN(); const items=[];
+  items.push({ok:nv.filter(n=>n.nombre.trim()).length>=3&&nv.every(n=>n.nombre.trim()&&n.desc.trim()),t:"Marco con al menos 3 niveles, cada uno con nombre y definición"});
+  items.push({ok:cs.length>=2&&cs.every(c=>c.desc.trim()&&c.cat.trim()),t:"Competencias con categoría y definición"});
+  items.push({ok:ps.length>0&&ps.every(p=>p.desc.trim().length>=40),t:"Perfiles con nombre del puesto y descripción completa"});
+  items.push({ok:ps.length>0&&ps.every(p=>p.nivel!==""&&p.comps.filter(id=>cs.some(c=>c.id===id)).length>=2),t:"Cada perfil con nivel esperado y al menos 2 competencias"});
+  const total=cs.length*nv.length; const filled=cs.reduce((a,c)=>a+nv.filter((_,j)=>((c.beh||[])[j]||"").trim()).length,0);
+  items.push({ok:total>0&&filled===total,t:`Comportamientos completos (${filled} de ${total})`,part:total?filled/total:0});
+  items.push({ok:S.usuarios.some(u=>u.nombre.trim()),t:"Al menos un usuario de prueba identificado"});
+  const score=items.reduce((a,i)=>a+(i.ok?1:(i.part||0)),0)/items.length;
+  return {items,score,filled,total};}
+
+B.resumen=()=>{const r=readiness();const pct=Math.round(r.score*100);
+  return head("resumen")+`<div class="ready-top"><b>${pct} %</b><div class="track"><i style="width:${pct}%"></i></div></div>
+  <ul class="rlist">${r.items.map(i=>`<li class="${i.ok?"ok":"pend"}"><span class="ic" aria-hidden="true">${i.ok?"✓":"!"}</span><span><span class="sr">${i.ok?"Listo: ":"Pendiente: "}</span>${i.t}</span></li>`).join("")}</ul>
+  <div class="actions"><button class="btn primary" data-act="export">Descargar insumo en Excel</button><button class="btn" data-act="text">${showText?"Ocultar texto":"Ver como texto"}</button></div>
+  ${dlMsg?`<p class="msg">${esc(dlMsg)}</p>`:""}
+  ${showText?`<textarea class="in out" readonly aria-label="Insumo en texto">${esc(asText())}</textarea>`:""}`;};
+
+B.revision=()=>{
+  if(!sampleFn)return head("revision")+`<p class="empty">La revisión con IA no está disponible en esta vista. Usa la lista de verificación del cierre para revisar tu insumo.</p>`;
+  let body="";
+  if(review&&review.loading)body=`<p class="msg">Revisando tu modelo…</p>`;
+  else if(review&&review.error)body=`<p class="msg err">${esc(review.error)}</p>`;
+  else if(review&&review.items)body=`<ul class="rev">${review.items.map(o=>`<li class="${o.nivel==="ok"?"ok":"ajuste"}"><b>${o.nivel==="ok"?"Bien":"Por ajustar"}: ${esc(o.elemento)}</b>${esc(o.observacion)}</li>`).join("")}</ul>`;
+  return head("revision")+`<button class="btn ia-btn" data-act="iaReview"${review&&review.loading?" disabled":""}>Revisar mi matriz con IA</button>${body}`;};
+
+/* ---------- live views ---------- */
+function renderLive(){const nv=S.marco.niveles; const cs=named().slice(0,6);
+  const rows=cs.length?cs:[null,null,null,null];
+  let h=`<div class="mx" style="--n:${nv.length}"><span></span>${nv.map((n,j)=>`<span class="hd" title="${esc(lvName(n,j))}">${j+1}</span>`).join("")}`;
+  rows.forEach((c,ri)=>{h+=c?`<span class="rl" title="${esc(c.nombre)}">${esc(c.nombre)}</span>`:`<span class="rl ph">Competencia ${ri+1}</span>`;
+    nv.forEach((_,j)=>{const on=c&&((c.beh||[])[j]||"").trim();h+=`<span class="c${on?" on":""}"${on?` style="background:${LV_COLORS[j]}"`:""}></span>`;});});
+  h+="</div>";document.getElementById("mx").innerHTML=h;
+  const r=readiness();const more=named().length>6?` (se muestran 6 de ${named().length})`:"";
+  document.getElementById("mxcap").textContent=`${named().length} competencias, ${nv.length} niveles, ${r.filled} de ${r.total} comportamientos escritos${more}.`;
+  const pct=Math.round(r.score*100);document.getElementById("pct").textContent=pct+" %";document.getElementById("bar").style.width=pct+"%";}
+
+/* ---------- steps ---------- */
+let cur=0;
+function renderAgenda(){document.getElementById("agenda").innerHTML=G.steps.map((s,i)=>`<li><button data-act="go" data-i="${i}"${i===cur?' aria-current="step"':""}><span class="n">${i===0?"0":i}</span><span>${s.t}<span class="m">${s.min}</span></span></button></li>`).join("");}
+function renderStep(){const s=G.steps[cur];const last=G.steps.length-1;
+  const kick=cur===0?"Preparación, antes de la sesión":`Paso ${cur} de ${last}, ${s.min}`;
+  let h=`<article class="step"><p class="kick">${kick}</p><h2>${s.t}</h2><div class="prose"><p class="lead">${s.lead}</p>${s.html||""}</div>`;
+  (s.blocks||[]).filter(b=>b!=="revision"||sampleFn).forEach(b=>{h+=`<section class="wb" data-block="${b}">${B[b]()}</section>`;});
+  if(s.after)h+=`<div class="prose">${s.after}</div>`;
+  if(s.tip)h+=`<aside class="tip"><span class="blob" aria-hidden="true"></span><div><h4>Recomendación lapzo</h4><p>${s.tip}</p></div></aside>`;
+  if(s.fac)h+=`<details class="fac"><summary>Notas para quien facilita</summary>${s.fac}</details>`;
+  h+=`<nav class="nav" aria-label="Navegación entre pasos">${cur>0?`<button class="btn" data-act="go" data-i="${cur-1}">Anterior: ${G.steps[cur-1].t}</button>`:"<span></span>"}${cur<last?`<button class="btn primary" data-act="go" data-i="${cur+1}">Siguiente: ${G.steps[cur+1].t}</button>`:""}</nav></article>`;
+  document.getElementById("main").innerHTML=h;}
+function rerenderAll(){document.querySelectorAll("[data-block]").forEach(el=>{el.innerHTML=B[el.dataset.block]();});renderLive();}
+function rerenderOthers(src){document.querySelectorAll("[data-block]").forEach(el=>{if(!el.contains(src))el.innerHTML=B[el.dataset.block]();});}
+function rerenderOf(el){const b=el.closest("[data-block]");if(b)b.innerHTML=B[b.dataset.block]();}
+function go(i,scroll){cur=Math.max(0,Math.min(G.steps.length-1,i));renderAgenda();renderStep();renderLive();
+  try{history.replaceState(null,"","#paso-"+cur);}catch(e){}
+  if(scroll){const m=document.getElementById("main");window.scrollTo({top:m.getBoundingClientRect().top+window.scrollY-24,behavior:"smooth"});}}
+function renderMode(){document.querySelectorAll('[data-act="modo"]').forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===S.modo)));}
+
+/* ---------- AI ---------- */
+async function iaComps(id){const p=S.perfiles.find(x=>x.id===id);if(!p)return;
+  if(!(p.desc.trim()||p.resp.trim())){sug[id]={error:"Primero escribe la descripción o las responsabilidades del puesto."};rerenderBlock("perfiles");return;}
+  sug[id]={loading:true};rerenderBlock("perfiles");
+  const catalog=named().map(c=>c.nombre).join(", ")||"(vacío)";
+  const prompt=`Eres consultor senior de desarrollo organizacional en México y ayudas a construir un modelo de competencias para cargarlo en una plataforma de gestión de talento.
+Analiza este perfil de puesto y propone entre 4 y 6 competencias clave. Combina competencias organizacionales y técnicas; incluye de liderazgo solo si el puesto tiene personas a cargo. Si alguna del catálogo actual aplica, reutilízala con exactamente el mismo nombre.
+Perfil:
+- Puesto: ${p.puesto||"(sin nombre)"}
+- Área: ${p.area||"-"}
+- Reporta a: ${p.reporta||"-"}
+- Nivel de contribución o mando: ${p.contribucion||"-"}
+- Personas a cargo: ${p.equipo||"-"}
+- Descripción: ${p.desc||"-"}
+- Responsabilidades: ${p.resp||"-"}
+Catálogo actual: ${catalog}
+Escribe en español neutro y claro. La descripción de cada competencia debe ser una oración que explique qué significa en la práctica. El motivo explica en una oración por qué aplica a este puesto.
+Responde únicamente con JSON válido, sin texto adicional, con esta forma:
+{"competencias":[{"nombre":"","categoria":"Organizacionales | Liderazgo | Técnicas","descripcion":"","motivo":""}]}`;
+  try{const r=await sampleFn.json(prompt,{modelTier:"default"});
+    const items=(r&&Array.isArray(r.competencias)?r.competencias:[]).filter(x=>x&&x.nombre).slice(0,6).map(x=>({nombre:String(x.nombre),categoria:String(x.categoria||"").split("|")[0].trim(),descripcion:String(x.descripcion||""),motivo:String(x.motivo||"")}));
+    sug[id]=items.length?{items}:{error:"No se obtuvieron propuestas. Revisa que la descripción tenga suficiente detalle."};
+  }catch(e){sug[id]={error:aiErr(e)};}
+  rerenderBlock("perfiles");}
+function acceptSug(id,j){const s=sug[id];const p=S.perfiles.find(x=>x.id===id);if(!s||!s.items||!p)return;const it=s.items[j];
+  let c=S.competencias.find(x=>x.nombre.trim().toLowerCase()===it.nombre.trim().toLowerCase());
+  if(!c){c={id:uid(),nombre:it.nombre,cat:it.categoria,desc:it.descripcion,beh:[],ia:true};S.competencias.push(c);}
+  if(!p.comps.includes(c.id))p.comps.push(c.id);
+  it.added=true;save();rerenderAll();}
+async function iaBeh(id){const c=S.competencias.find(x=>x.id===id);if(!c)return;const nv=S.marco.niveles;
+  if(!nv.every(n=>n.nombre.trim())){behAI[id]={msg:"Primero ponle nombre a todos los niveles de tu marco.",err:true};rerenderBlock("comportamientos");return;}
+  if(!Array.isArray(c.beh))c.beh=[];
+  const empties=nv.map((_,j)=>j).filter(j=>!((c.beh[j]||"").trim()));
+  if(!empties.length){behAI[id]={msg:"Todos los niveles ya tienen texto. Borra los que quieras volver a proponer."};rerenderBlock("comportamientos");return;}
+  behAI[id]={loading:true};rerenderBlock("comportamientos");
+  const ctx=S.perfiles.filter(p=>p.puesto.trim()&&p.comps.includes(id)).map(p=>p.puesto).join(", ")||"no especificados";
+  const prompt=`Eres consultor senior de desarrollo organizacional. Redacta comportamientos observables para una matriz de competencias.
+Competencia: ${c.nombre}
+Definición: ${c.desc||"(sin definición)"}
+Puestos donde aplica: ${ctx}
+Niveles del marco, de menor a mayor:
+${nv.map((n,j)=>`${j+1}. ${n.nombre}: ${n.desc||"(sin definición)"}`).join("\n")}
+Reglas: un comportamiento por nivel, de una o dos oraciones; verbo en presente en tercera persona; describe lo que la persona hace y con qué resultado, de forma que un líder pueda observarlo; cada nivel debe ser claramente más exigente que el anterior; sin adjetivos vagos como "buen" o "excelente"; español neutro.
+Responde únicamente con JSON válido, sin texto adicional: {"comportamientos":["nivel 1","nivel 2", "..."]} con exactamente ${nv.length} elementos.`;
+  try{const r=await sampleFn.json(prompt,{modelTier:"default"});const arr=r&&Array.isArray(r.comportamientos)?r.comportamientos:[];
+    if(!arr.length)throw {code:"empty"};
+    empties.forEach(j=>{if(arr[j])c.beh[j]=String(arr[j]);});
+    behAI[id]={msg:"Propuesta lista en los niveles que estaban vacíos. Revísala y ajústala a tu lenguaje."};save();
+  }catch(e){behAI[id]={msg:aiErr(e),err:true};}
+  rerenderBlock("comportamientos");renderLive();}
+async function iaReview(){review={loading:true};rerenderBlock("revision");
+  const nv=S.marco.niveles;const cs=named();
+  const model={marco:nv.map((n,j)=>({nivel:j+1,nombre:n.nombre,definicion:n.desc})),
+    competencias:cs.map(c=>({nombre:c.nombre,categoria:c.cat,definicion:c.desc,comportamientos:nv.map((_,j)=>(c.beh||[])[j]||"")})),
+    perfiles:perfilesN().map(p=>({puesto:p.puesto,descripcion:p.desc,nivelEsperado:p.nivel===""?"":lvName(nv[+p.nivel]||{nombre:""},+p.nivel),competencias:p.comps.map(id=>(cs.find(c=>c.id===id)||{}).nombre).filter(Boolean)}))};
+  const prompt=`Eres consultor senior de desarrollo organizacional. Revisa esta matriz de competencias inicial que una empresa cargará en una plataforma de diagnóstico por competencias.
+Evalúa: claridad de las definiciones; que los comportamientos sean observables y medibles; que haya una progresión clara entre niveles; competencias duplicadas o que se traslapan; coherencia entre el nivel esperado y el puesto; celdas vacías.
+Modelo:
+${JSON.stringify(model)}
+Da entre 4 y 8 observaciones concretas y accionables, empezando por las más importantes. Incluye al menos una fortaleza si la hay. Español neutro, tono de colega experto, una o dos oraciones por observación.
+Responde únicamente con JSON válido, sin texto adicional: {"observaciones":[{"nivel":"ok | ajuste","elemento":"a qué parte se refiere","observacion":""}]}`;
+  try{const r=await sampleFn.json(prompt,{modelTier:"default"});const items=(r&&Array.isArray(r.observaciones)?r.observaciones:[]).map(o=>({nivel:String(o.nivel||"").trim().startsWith("ok")?"ok":"ajuste",elemento:String(o.elemento||""),observacion:String(o.observacion||"")}));
+    review=items.length?{items}:{error:"No se obtuvieron observaciones. Inténtalo de nuevo."};
+  }catch(e){review={error:aiErr(e)};}
+  rerenderBlock("revision");}
+function rerenderBlock(name){document.querySelectorAll(`[data-block="${name}"]`).forEach(el=>{el.innerHTML=B[name]();});}
+
+/* ---------- export ---------- */
+function rows(){const nv=S.marco.niveles,cs=named(),ps=perfilesN();
+  const compName=id=>(cs.find(c=>c.id===id)||{}).nombre;
+  const perfilName=id=>(S.perfiles.find(p=>p.id===id)||{}).puesto||"";
+  return {
+    resumen:[["Insumo inicial para Desarrollo por Competencias (DxC)"],[],["Guía",G.title],["Empresa",S.org.empresa],["Responsable",S.org.responsable],["Fecha",S.org.fecha],[G.estadoLabel,S.org.estado],["Nombre del marco",S.marco.nombre],["Nombre de la matriz",S.matriz.nombre],["Avance del insumo",Math.round(readiness().score*100)+" %"]],
+    marco:[["Nivel","Nombre","Definición"]].concat(nv.map((n,j)=>[j+1,n.nombre,n.desc])),
+    competencias:[["Categoría","Competencia","Definición","Origen"]].concat(cs.map(c=>[c.cat,c.nombre,c.desc,c.ia?"Propuesta por IA":"Capturada"])),
+    perfiles:[["Puesto (rol en Lapzo)","Área u OU","Reporta a","Nivel de contribución o mando","Personas a cargo","Descripción del puesto","Responsabilidades","Nivel esperado en la matriz","Competencias a evaluar"]].concat(ps.map(p=>[p.puesto,p.area,p.reporta,p.contribucion,p.equipo,p.desc,p.resp,p.nivel===""?"":((+p.nivel+1)+". "+lvName(nv[+p.nivel]||{nombre:""},+p.nivel)),p.comps.map(compName).filter(Boolean).join("; ")])),
+    matriz:[["Competencia","Categoría"].concat(nv.map((n,j)=>(j+1)+". "+lvName(n,j)))].concat(cs.map(c=>[c.nombre,c.cat].concat(nv.map((_,j)=>(c.beh||[])[j]||"")))),
+    usuarios:[["Nombre","Correo o usuario","Perfil"]].concat(S.usuarios.filter(u=>u.nombre.trim()||u.correo.trim()).map(u=>[u.nombre,u.correo,perfilName(u.perfil)])),
+    diagnostico:[["Elemento","Decisión"],["Competencias a evaluar",S.diag.comps.map(compName).filter(Boolean).join("; ")],["Banco de preguntas",{ia:"Generado con LIA y revisado",manual:"Manual",mixto:"Mixto"}[S.diag.banco]||""],["Preguntas por usuario",S.diag.preguntas],["Porcentaje mínimo para aprobar",S.diag.aprobacion],["Intentos disponibles",S.diag.intentos],["Tiempo límite (min)",S.diag.tiempo],["Fecha de inicio",S.diag.inicio],["Fecha de cierre",S.diag.fin],["Diagnóstico directo al nivel",S.diag.directo],["Feedback",S.diag.feedback]],
+    pasos:[["Elemento","Detalle"],["Momento más complejo",S.cierre.momento],["Tipo de bloqueo",S.cierre.tipo],["Bloqueo",S.cierre.bloqueo],["Solución propuesta",S.cierre.solucion],["Siguiente paso",S.cierre.paso],["Responsable",S.cierre.responsable],["Fecha compromiso",S.cierre.fecha],["Requiere sesión 1:1",S.cierre.unoauno]]
+  };}
+const SHEETS=[["resumen","Resumen",[34,60]],["marco","Marco",[8,26,70]],["competencias","Competencias",[20,30,70,18]],["perfiles","Perfiles",[28,18,22,24,14,60,60,24,50]],["matriz","Matriz",[28,18,45,45,45,45,45,45]],["usuarios","Usuarios de prueba",[30,34,28]],["diagnostico","Diagnóstico",[32,60]],["pasos","Próximos pasos",[26,70]]];
+async function exportX(){const R=rows();
+  if(!window.XLSX){dlMsg="No se pudo preparar el archivo de Excel en esta vista. Usa Ver como texto y copia el contenido.";rerenderBlock("resumen");return;}
+  const wb=XLSX.utils.book_new();
+  SHEETS.forEach(([k,name,w])=>{const ws=XLSX.utils.aoa_to_sheet(R[k]);ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,name);});
+  const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
+  const emp=(S.org.empresa.trim()||"mi empresa").replace(/[\\/:*?"<>|]/g,"");
+  const fname=`Insumo DxC - ${emp}.xlsx`;
+  if(!dl){try{const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);dlMsg="Listo: tu insumo se descargó en Excel. Búscalo en tu carpeta de Descargas.";}
+    catch(e){dlMsg="No fue posible descargar el archivo. Usa Ver como texto y copia el contenido.";}
+    rerenderBlock("resumen");return;}
+  try{await dl.save({filename:fname,data:buf});dlMsg="Listo: tu insumo se descargó en Excel.";}
+  catch(e){dlMsg=e&&e.code==="declined"?"Descarga cancelada.":e&&e.code==="rate_limited"?"Ya hay una descarga pendiente de confirmar.":"No fue posible descargar el archivo. Usa Ver como texto.";}
+  rerenderBlock("resumen");}
+function asText(){const R=rows();return SHEETS.map(([k,name])=>name.toUpperCase()+"\n"+R[k].map(r=>r.join("\t")).join("\n")).join("\n\n");}
+
+/* ---------- example ---------- */
+function example(){const s=blank();s.modo=S.modo;s.org=Object.assign({},S.org);
+  s.org.empresa=s.org.empresa||"Empresa de ejemplo";
+  s.marco={nombre:"Marco de dominio comercial",niveles:PRESETS.dominio.niveles.map(n=>Object.assign({},n))};
+  const C=(n,cat,d,b)=>({id:uid(),nombre:n,cat,desc:d,beh:b});
+  const cli=C("Orientación al cliente","Organizacionales","Entiende las necesidades del cliente y actúa para generar soluciones que le den valor y construyan relaciones de largo plazo.",["Atiende las solicitudes del cliente en tiempo y forma siguiendo los procesos establecidos.","Identifica necesidades del cliente más allá de la solicitud inicial y propone alternativas.","Anticipa problemas del cliente y diseña soluciones que mejoran su experiencia.","Define estándares de servicio para el área y forma a otros en la atención al cliente."]);
+  const neg=C("Negociación","Técnicas","Logra acuerdos que benefician a ambas partes cuidando la rentabilidad y la relación.",["Presenta la oferta estándar y escala las objeciones a su líder.","Maneja las objeciones comunes y cierra acuerdos dentro de los márgenes autorizados.","Negocia condiciones complejas o de alto valor protegiendo el margen.","Diseña estrategias de negociación para cuentas clave y entrena al equipo en ellas."]);
+  const res=C("Orientación a resultados","Organizacionales","Se compromete con metas retadoras y da seguimiento constante hasta lograrlas.",["Cumple las metas asignadas con el seguimiento de su líder.","Da seguimiento propio a su avance y corrige el rumbo cuando se desvía.","Supera sus metas de forma consistente y ayuda a otros a cumplir las suyas.","Define las metas del área y crea mecanismos que elevan el desempeño de todos."]);
+  const lid=C("Liderazgo de equipos","Liderazgo","Guía, motiva y desarrolla a su equipo para alcanzar los objetivos.",["Comparte información y prioridades con su equipo de forma clara.","Asigna responsabilidades, da retroalimentación y reconoce los logros.","Desarrolla a las personas de su equipo con planes concretos y maneja los conflictos.","Forma nuevos líderes y construye una cultura de alto desempeño."]);
+  const pla=C("Planeación comercial","Técnicas","Organiza su cartera, pronósticos y actividades de venta para cumplir los objetivos del periodo.",["Registra sus actividades y oportunidades en el CRM.","Planea su semana con base en su embudo y prioriza oportunidades.","Elabora pronósticos confiables y planes de trabajo por cuenta.","Define la estrategia comercial del territorio y asigna los recursos."]);
+  s.competencias=[cli,neg,res,lid,pla];
+  const P=(o)=>Object.assign(newPerfil(),o);
+  s.perfiles=[
+    P({puesto:"Ejecutivo de ventas",area:"Comercial",reporta:"Supervisor de ventas",contribucion:"Contribuidor individual",equipo:"No",desc:"Genera y cierra oportunidades de venta con clientes PyME de su territorio para cumplir su cuota mensual.",resp:"Prospectar clientes nuevos\nPresentar propuestas comerciales\nNegociar y cerrar ventas\nDar seguimiento en el CRM",nivel:"1",comps:[cli.id,neg.id,res.id,pla.id]}),
+    P({puesto:"Supervisor de ventas",area:"Comercial",reporta:"Gerente comercial",contribucion:"Coordinación",equipo:"Sí",desc:"Coordina a un equipo de seis ejecutivos para asegurar el cumplimiento de la cuota del equipo y la calidad de la atención.",resp:"Dar seguimiento diario al embudo del equipo\nAcompañar a ejecutivos en negociaciones clave\nRetroalimentar y desarrollar al equipo",nivel:"2",comps:[cli.id,neg.id,res.id,lid.id,pla.id]}),
+    P({puesto:"Gerente comercial",area:"Comercial",reporta:"Dirección general",contribucion:"Gerencia",equipo:"Sí",desc:"Dirige la estrategia comercial de la región, define metas y desarrolla a los supervisores de su equipo.",resp:"Definir la estrategia y las metas de la región\nNegociar con cuentas clave\nDesarrollar a los supervisores",nivel:"3",comps:[cli.id,res.id,lid.id,pla.id,neg.id]})];
+  s.matriz={nombre:"Matriz Comercial"};
+  S=s;Object.keys(sug).forEach(k=>delete sug[k]);Object.keys(behAI).forEach(k=>delete behAI[k]);review=null;dlMsg="";save();}
+
+/* ---------- events ---------- */
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset||!t.dataset.k)return;setPath(t.dataset.k,t.value);save();renderLive();});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.act==="toggleComp"){const p=S.perfiles[+t.dataset.p];const id=t.dataset.c;if(t.checked){if(!p.comps.includes(id))p.comps.push(id);}else p.comps=p.comps.filter(x=>x!==id);save();rerenderOthers(t);renderLive();return;}
+  if(t.dataset.act==="toggleDiag"){const id=t.dataset.c;if(t.checked){if(!S.diag.comps.includes(id))S.diag.comps.push(id);}else S.diag.comps=S.diag.comps.filter(x=>x!==id);save();return;}
+  if(t.dataset.act==="prep"){S.prep[t.dataset.v]=t.checked;save();return;}
+  if(t.dataset.k&&t.dataset.r){rerenderOthers(t);}});
+function arm(btn,fn){if(btn.dataset.armed){delete btn.dataset.armed;btn.textContent=btn.dataset.label;fn();return;}
+  btn.dataset.armed="1";btn.textContent="Toca otra vez para confirmar";setTimeout(()=>{if(btn.dataset.armed){delete btn.dataset.armed;btn.textContent=btn.dataset.label;}},3500);}
+const hasData=()=>S.competencias.length||S.perfiles.some(p=>p.puesto.trim()||p.desc.trim())||S.marco.niveles.some(n=>n.nombre.trim());
+document.addEventListener("click",e=>{const b=e.target.closest("button[data-act]");if(!b)return;const a=b.dataset.act;
+  switch(a){
+    case "go":go(+b.dataset.i,true);break;
+    case "modo":S.modo=b.dataset.v;if(S.modo==="sesion"&&S.perfiles.length>3){/* keep data, just limit adding */}save();renderMode();rerenderAll();break;
+    case "example":if(hasData())arm(b,()=>{example();renderMode();go(cur);});else{example();renderMode();go(cur);}break;
+    case "reset":arm(b,()=>{const m=S.modo;S=blank();S.modo=m;review=null;dlMsg="";showText=false;save();go(0,true);});break;
+    case "preset":{const p=PRESETS[b.dataset.v];S.marco.niveles=p.niveles.map(n=>Object.assign({},n));if(!S.marco.nombre.trim())S.marco.nombre=p.nombre;save();rerenderAll();break;}
+    case "addNivel":S.marco.niveles.push({nombre:"",desc:""});save();rerenderAll();break;
+    case "delNivel":{const i=+b.dataset.i;S.marco.niveles.splice(i,1);S.competencias.forEach(c=>{if(Array.isArray(c.beh))c.beh.splice(i,1);});S.perfiles.forEach(p=>{if(p.nivel!==""){const n=+p.nivel;if(n===i)p.nivel="";else if(n>i)p.nivel=String(n-1);}});save();rerenderAll();break;}
+    case "addComp":S.competencias.push({id:uid(),nombre:"",cat:"",desc:"",beh:[]});save();rerenderAll();{const ins=document.querySelectorAll('[data-block="competencias"] .comp-top input');if(ins.length)ins[ins.length-2].focus();}break;
+    case "addLib":{const l=LIB.find(x=>x[0]===b.dataset.n);if(l){S.competencias.push({id:uid(),nombre:l[0],cat:l[1],desc:l[2],beh:[]});save();rerenderAll();}break;}
+    case "delComp":{const c=S.competencias.splice(+b.dataset.i,1)[0];if(c){S.perfiles.forEach(p=>p.comps=p.comps.filter(x=>x!==c.id));S.diag.comps=S.diag.comps.filter(x=>x!==c.id);}save();rerenderAll();break;}
+    case "addPerfil":if(S.perfiles.length<maxPerfiles()){S.perfiles.push(newPerfil());save();rerenderAll();}break;
+    case "delPerfil":{const p=S.perfiles.splice(+b.dataset.i,1)[0];if(p)S.usuarios.forEach(u=>{if(u.perfil===p.id)u.perfil="";});save();rerenderAll();break;}
+    case "addUser":S.usuarios.push({nombre:"",correo:"",perfil:""});save();rerenderAll();break;
+    case "delUser":S.usuarios.splice(+b.dataset.i,1);save();rerenderAll();break;
+    case "iaComps":if(sampleFn)iaComps(b.dataset.id);break;
+    case "acceptSug":acceptSug(b.dataset.id,+b.dataset.j);break;
+    case "iaBeh":if(sampleFn)iaBeh(b.dataset.id);break;
+    case "iaReview":if(sampleFn)iaReview();break;
+    case "export":exportX();break;
+    case "text":showText=!showText;rerenderBlock("resumen");break;
+  }});
+
+/* ---------- init ---------- */
+document.title=G.title;
+document.getElementById("aud").textContent=G.audience;
+document.getElementById("ttl").textContent=G.title;
+document.getElementById("sub").textContent=G.sub;
+document.getElementById("facts").innerHTML=G.facts.map(f=>`<span>${f}</span>`).join("");
+renderMode();
+const m=/^#paso-(\d+)$/.exec(location.hash||"");
+go(m?+m[1]:0,false);
+})();
+</script>
+</body>
+</html>
